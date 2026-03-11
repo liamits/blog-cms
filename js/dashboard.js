@@ -6,10 +6,52 @@ class AdminDashboard {
         this.init();
     }
 
-    init() {
+    async init() {
+        // Check authentication first
+        const isAuthenticated = await this.checkAuthentication();
+        if (!isAuthenticated) {
+            window.location.href = '/login';
+            return;
+        }
+
         this.setupEventListeners();
         this.loadDashboardData();
         this.showSection('dashboard');
+    }
+
+    async checkAuthentication() {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            return false;
+        }
+
+        try {
+            const response = await fetch('/api/auth/verify', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                // Update user info in header
+                const userInfo = document.querySelector('.user-info span');
+                if (userInfo && data.user) {
+                    userInfo.textContent = data.user.username;
+                }
+                return true;
+            } else {
+                // Token is invalid, remove it
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('user');
+                return false;
+            }
+        } catch (error) {
+            console.error('Authentication check failed:', error);
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('user');
+            return false;
+        }
     }
 
     setupEventListeners() {
@@ -45,6 +87,95 @@ class AdminDashboard {
                 e.target.style.display = 'none';
             }
         });
+
+        // Add logout functionality
+        const userInfo = document.querySelector('.user-info');
+        if (userInfo) {
+            userInfo.style.cursor = 'pointer';
+            userInfo.addEventListener('click', () => {
+                this.showLogoutMenu();
+            });
+        }
+    }
+
+    showLogoutMenu() {
+        const existingMenu = document.querySelector('.logout-menu');
+        if (existingMenu) {
+            existingMenu.remove();
+            return;
+        }
+
+        const menu = document.createElement('div');
+        menu.className = 'logout-menu';
+        menu.innerHTML = `
+            <div class="logout-option" onclick="dashboard.logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                Logout
+            </div>
+        `;
+        menu.style.cssText = `
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            min-width: 120px;
+        `;
+
+        const logoutOption = menu.querySelector('.logout-option');
+        logoutOption.style.cssText = `
+            padding: 12px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #e53e3e;
+            font-size: 0.9rem;
+            transition: background 0.3s ease;
+        `;
+
+        logoutOption.addEventListener('mouseenter', () => {
+            logoutOption.style.background = '#f7fafc';
+        });
+
+        logoutOption.addEventListener('mouseleave', () => {
+            logoutOption.style.background = 'transparent';
+        });
+
+        const userInfo = document.querySelector('.user-info');
+        userInfo.style.position = 'relative';
+        userInfo.appendChild(menu);
+
+        // Close menu when clicking outside
+        setTimeout(() => {
+            document.addEventListener('click', (e) => {
+                if (!userInfo.contains(e.target)) {
+                    menu.remove();
+                }
+            }, { once: true });
+        }, 100);
+    }
+
+    async logout() {
+        try {
+            const token = localStorage.getItem('authToken');
+            await fetch('/api/auth/logout', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+        } catch (error) {
+            console.error('Logout error:', error);
+        } finally {
+            // Clear local storage and redirect
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+        }
     }
 
     showSection(sectionName) {
@@ -132,7 +263,18 @@ class AdminDashboard {
 
     async loadPosts() {
         try {
-            const response = await fetch('/api/posts?limit=100');
+            const token = localStorage.getItem('authToken');
+            const response = await fetch('/api/posts?limit=100', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.status === 401 || response.status === 403) {
+                this.handleAuthError();
+                return;
+            }
+
             const data = await response.json();
             this.posts = data.posts || [];
             this.renderPosts();
@@ -172,7 +314,18 @@ class AdminDashboard {
 
     async loadCategories() {
         try {
-            const response = await fetch('/api/categories');
+            const token = localStorage.getItem('authToken');
+            const response = await fetch('/api/categories', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.status === 401 || response.status === 403) {
+                this.handleAuthError();
+                return;
+            }
+
             this.categories = await response.json();
             this.renderCategories();
         } catch (error) {
@@ -273,13 +426,15 @@ class AdminDashboard {
         };
 
         try {
+            const token = localStorage.getItem('authToken');
             const url = postId ? `/api/posts/${postId}` : '/api/posts';
             const method = postId ? 'PUT' : 'POST';
 
             const response = await fetch(url, {
                 method,
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(postData)
             });
@@ -449,6 +604,12 @@ class AdminDashboard {
         setTimeout(() => {
             notification.remove();
         }, 3000);
+    }
+
+    handleAuthError() {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
     }
 }
 

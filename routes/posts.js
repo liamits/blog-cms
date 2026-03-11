@@ -2,19 +2,19 @@ const express = require('express');
 const router = express.Router();
 const Post = require('../models/Post');
 const Category = require('../models/Category');
+const { authenticateToken } = require('./auth');
 
-// Get all posts with pagination
-router.get('/', async (req, res) => {
+// Get all posts with pagination (protected route)
+router.get('/', authenticateToken, async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
-        const status = req.query.status || 'published';
+        const status = req.query.status;
         const category = req.query.category;
 
-        const query = { status };
-        if (category) {
-            query.category = category;
-        }
+        const query = {};
+        if (status) query.status = status;
+        if (category) query.category = category;
 
         const posts = await Post.find(query)
             .populate('category', 'name color')
@@ -35,17 +35,13 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Get single post
-router.get('/:id', async (req, res) => {
+// Get single post (protected route)
+router.get('/:id', authenticateToken, async (req, res) => {
     try {
         const post = await Post.findById(req.params.id).populate('category', 'name color');
         if (!post) {
             return res.status(404).json({ message: 'Post not found' });
         }
-        
-        // Increment views
-        post.views += 1;
-        await post.save();
         
         res.json(post);
     } catch (error) {
@@ -54,7 +50,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create post
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
     try {
         const { title, content, author, category, tags, status, featured } = req.body;
         
@@ -86,7 +82,7 @@ router.post('/', async (req, res) => {
 });
 
 // Update post
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
     try {
         const { title, content, author, category, tags, status, featured } = req.body;
         const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -117,7 +113,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete post
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
     try {
         const post = await Post.findByIdAndDelete(req.params.id);
         if (!post) {

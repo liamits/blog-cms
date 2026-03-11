@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const Category = require('../models/Category');
+const { authenticateToken } = require('./auth');
 
-// Get all categories
+// Get all categories (public route)
 router.get('/', async (req, res) => {
     try {
         const categories = await Category.find().sort({ createdAt: -1 });
@@ -12,7 +13,7 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Get single category
+// Get single category (public route)
 router.get('/:id', async (req, res) => {
     try {
         const category = await Category.findById(req.params.id);
@@ -25,8 +26,9 @@ router.get('/:id', async (req, res) => {
     }
 });
 
+// Protected routes (require authentication)
 // Create category
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
     try {
         const { name, description, color } = req.body;
         
@@ -52,7 +54,7 @@ router.post('/', async (req, res) => {
 });
 
 // Update category
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
     try {
         const { name, description, color } = req.body;
         const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -74,7 +76,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete category
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
     try {
         const category = await Category.findByIdAndDelete(req.params.id);
         if (!category) {
