@@ -1,0 +1,10 @@
+[
+    {
+        "id": 1,
+        "title": "Welcome to My Blog",
+        "author": "Admin",
+        "date": "2026-03-11",
+        "content": "This is the first post on my blog. I will share practical experiences and knowledge about web development, technology, and life.\n\nThis blog is built with pure HTML, CSS, and JavaScript, without using complex frameworks. This helps the website load fast and be easy to maintain.\n\nI hope you will find useful information here!",
+        "excerpt": "Welcome post and introduction to the blog..."
+    }
+]
