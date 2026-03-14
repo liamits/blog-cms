@@ -14,6 +14,7 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname)));
+app.use('/img', express.static(path.join(__dirname, 'img')));
 
 // Session middleware
 app.use(session({

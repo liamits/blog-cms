@@ -62,7 +62,17 @@ const LandingPage = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-16 min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-500 via-primary-600 to-secondary-500 text-white relative overflow-hidden">
+      <section className="pt-16 min-h-screen flex items-center justify-center relative overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <img 
+            src="/img/banner.avif" 
+            alt="Banner" 
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-primary-500/80 via-primary-600/70 to-secondary-500/80"></div>
+        </div>
+
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-10 left-10 w-20 h-20 bg-white rounded-full"></div>
@@ -71,7 +81,7 @@ const LandingPage = () => {
           <div className="absolute bottom-40 right-10 w-24 h-24 bg-white rounded-full"></div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 text-white">
           <div className="animate-fade-in">
             <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
               Welcome to My Blog
