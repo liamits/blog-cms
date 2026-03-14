@@ -27,7 +27,10 @@ api.interceptors.response.use(
     if (error.response?.status === 401 || error.response?.status === 403) {
       localStorage.removeItem('authToken')
       localStorage.removeItem('user')
-      window.location.href = '/login'
+      // Use React Router navigation instead of hard redirect
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login'
+      }
     }
     return Promise.reject(error)
   }

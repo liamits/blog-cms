@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from 'react-query'
 import { AuthProvider } from './hooks/useAuth.jsx'
-import { Toaster } from './components/ui/Toaster'
+import { ToastProvider } from './components/ui/Toaster'
 import App from './App.jsx'
 import './index.css'
 
@@ -20,11 +20,11 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <Toaster>
+        <ToastProvider>
           <AuthProvider>
             <App />
           </AuthProvider>
-        </Toaster>
+        </ToastProvider>
       </BrowserRouter>
     </QueryClientProvider>
   </React.StrictMode>,

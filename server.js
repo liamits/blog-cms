@@ -29,10 +29,7 @@ app.use(session({
 // MongoDB connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/blog_db';
 
-mongoose.connect(MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-});
+mongoose.connect(MONGODB_URI);
 
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
@@ -134,27 +131,35 @@ app.get('/api/public/categories', async (req, res) => {
 
 // Static file routes
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(path.join(__dirname, 'client/dist/index.html'));
 });
 
 app.get('/blog', (req, res) => {
-    res.sendFile(path.join(__dirname, 'blog.html'));
+    res.sendFile(path.join(__dirname, 'client/dist/index.html'));
 });
 
-app.get('/post', (req, res) => {
-    res.sendFile(path.join(__dirname, 'post.html'));
+app.get('/post/:id', (req, res) => {
+    res.sendFile(path.join(__dirname, 'client/dist/index.html'));
 });
 
 app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'login.html'));
+    res.sendFile(path.join(__dirname, 'client/dist/index.html'));
 });
 
-app.get('/dashboard', (req, res) => {
-    res.sendFile(path.join(__dirname, 'dashboard.html'));
+app.get('/dashboard*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'client/dist/index.html'));
 });
 
 app.get('/admin', (req, res) => {
     res.redirect('/login');
+});
+
+// Serve React static files
+app.use(express.static(path.join(__dirname, 'client/dist')));
+
+// Catch all handler for React Router
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'client/dist/index.html'));
 });
 
 // API endpoint to check authentication status

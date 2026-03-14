@@ -11,6 +11,15 @@ router.post('/register', async (req, res) => {
     try {
         const { username, email, password, role } = req.body;
 
+        // Basic validation
+        if (!username || !email || !password) {
+            return res.status(400).json({ message: 'Username, email, and password are required' });
+        }
+
+        if (password.length < 6) {
+            return res.status(400).json({ message: 'Password must be at least 6 characters long' });
+        }
+
         // Check if user already exists
         const existingUser = await User.findOne({
             $or: [{ email }, { username }]
@@ -59,6 +68,11 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
+
+        // Basic validation
+        if (!username || !password) {
+            return res.status(400).json({ message: 'Username and password are required' });
+        }
 
         // Find user by username or email
         const user = await User.findOne({

@@ -1,11 +1,17 @@
 {
   "name": "blog-admin",
   "version": "1.0.0",
-  "description": "Blog management system with MongoDB",
+  "description": "Blog management system with MongoDB and React",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "client": "cd client && npm run dev",
+    "client:build": "cd client && npm run build",
+    "client:install": "cd client && npm install",
+    "build": "npm run client:build",
+    "dev:full": "concurrently \"npm run dev\" \"npm run client\"",
+    "install:all": "npm install && npm run client:install"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -20,6 +26,7 @@
     "path": "^0.12.7"
   },
   "devDependencies": {
+    "concurrently": "^8.2.2",
     "nodemon": "^3.0.1"
   },
   "keywords": [
@@ -27,6 +34,7 @@
     "admin",
     "mongodb",
     "express",
+    "react",
     "authentication"
   ],
   "author": "Your Name",

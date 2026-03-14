@@ -41,6 +41,7 @@ const LoginPage = () => {
       } else {
         if (data.password !== data.confirmPassword) {
           error('Passwords do not match')
+          setIsLoading(false)
           return
         }
         

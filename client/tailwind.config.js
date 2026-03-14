@@ -17,7 +17,11 @@ export default {
         secondary: {
           500: '#764ba2',
           600: '#6b46c1',
-        }
+        },
+        background: '#ffffff',
+        foreground: '#1f2937',
+        border: '#e5e7eb',
+        ring: '#667eea',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
