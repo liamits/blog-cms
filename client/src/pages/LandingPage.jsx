@@ -1,45 +1,52 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { ArrowRight, BookOpen, Users, Eye, TrendingUp, FileText, Zap, Target, Code } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { ArrowRight, BookOpen, Users, Eye, TrendingUp, FileText, Zap, Target, Code, Calendar, User, Search } from 'lucide-react'
+import { postsAPI } from '../services/api'
 
 const LandingPage = () => {
-  const [stats, setStats] = useState({
-    posts: 0,
-    views: 0,
-    categories: 0
-  })
+  const [stats, setStats] = useState({ posts: 0, views: 0, categories: 0 })
+  const [latestPosts, setLatestPosts] = useState([])
+  const [searchQuery, setSearchQuery] = useState('')
+  const navigate = useNavigate()
 
   useEffect(() => {
-    // Animate stats on load
-    const animateStats = () => {
-      const savedPosts = localStorage.getItem('blogPosts')
-      let postsCount = 1
-      
-      if (savedPosts) {
-        const posts = JSON.parse(savedPosts)
-        postsCount = posts.length
+    fetchLatestPosts()
+
+    const savedPosts = localStorage.getItem('blogPosts')
+    let postsCount = savedPosts ? JSON.parse(savedPosts).length : 1
+    let current = 0
+    const increment = postsCount / 30
+    const timer = setInterval(() => {
+      current += increment
+      if (current >= postsCount) {
+        current = postsCount
+        clearInterval(timer)
       }
-
-      // Animate counter
-      let current = 0
-      const increment = postsCount / 30
-      const timer = setInterval(() => {
-        current += increment
-        if (current >= postsCount) {
-          current = postsCount
-          clearInterval(timer)
-        }
-        setStats(prev => ({
-          ...prev,
-          posts: Math.floor(current),
-          views: Math.floor(current * 15),
-          categories: Math.min(Math.floor(current / 2) + 1, 5)
-        }))
-      }, 50)
-    }
-
-    animateStats()
+      setStats(prev => ({
+        ...prev,
+        posts: Math.floor(current),
+        views: Math.floor(current * 15),
+        categories: Math.min(Math.floor(current / 2) + 1, 5)
+      }))
+    }, 50)
+    return () => clearInterval(timer)
   }, [])
+
+  const fetchLatestPosts = async () => {
+    try {
+      const res = await postsAPI.getPublic({ limit: 3, page: 1 })
+      setLatestPosts(res.data.posts || [])
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const handleSearch = (e) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      navigate(`/blog?search=${encodeURIComponent(searchQuery.trim())}`)
+    }
+  }
 
   return (
     <div className="min-h-screen">
@@ -103,6 +110,26 @@ const LandingPage = () => {
                 Learn More
               </a>
             </div>
+
+            {/* Search Bar */}
+            <form onSubmit={handleSearch} className="mt-8 max-w-xl mx-auto">
+              <div className="flex items-center bg-white/20 backdrop-blur-sm border border-white/40 rounded-full px-2 py-2 focus-within:bg-white/30 transition-all">
+                <Search className="w-5 h-5 text-white/70 ml-3 flex-shrink-0" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="Tìm kiếm bài viết..."
+                  className="flex-1 bg-transparent text-white placeholder-white/60 px-3 py-1 outline-none text-base"
+                />
+                <button
+                  type="submit"
+                  className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-full font-medium text-sm transition-colors"
+                >
+                  Tìm kiếm
+                </button>
+              </div>
+            </form>
           </div>
 
           {/* Floating Icon */}
@@ -207,6 +234,68 @@ const LandingPage = () => {
           </div>
         </div>
       </section>
+
+      {/* Latest Posts Section */}
+      {latestPosts.length > 0 && (
+        <section className="py-20 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">Latest Posts</h2>
+              <div className="w-24 h-1 bg-gradient-to-r from-primary-500 to-secondary-500 mx-auto mb-4"></div>
+              <p className="text-gray-500">Những bài viết mới nhất từ blog</p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8 mb-10">
+              {latestPosts.map(post => (
+                <article key={post._id} className="card hover:shadow-xl transition-shadow duration-300">
+                  <div className="p-6">
+                    {post.category && (
+                      <span
+                        className="px-2 py-1 text-xs font-medium text-white rounded-full mb-3 inline-block"
+                        style={{ backgroundColor: post.category.color }}
+                      >
+                        {post.category.name}
+                      </span>
+                    )}
+                    <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2">
+                      {post.title}
+                    </h3>
+                    <p className="text-gray-500 text-sm mb-4 line-clamp-3">
+                      {post.excerpt}
+                    </p>
+                    <div className="flex items-center justify-between text-xs text-gray-400 mb-4">
+                      <div className="flex items-center gap-1">
+                        <User className="w-3.5 h-3.5" />
+                        {post.author}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-3.5 h-3.5" />
+                        {new Date(post.publishedAt || post.createdAt).toLocaleDateString('vi-VN')}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Eye className="w-3.5 h-3.5" />
+                        {post.views || 0}
+                      </div>
+                    </div>
+                    <Link
+                      to={`/post/${post._id}`}
+                      className="inline-flex items-center text-primary-600 hover:text-primary-700 font-medium text-sm"
+                    >
+                      Đọc thêm <ArrowRight className="ml-1 w-4 h-4" />
+                    </Link>
+                  </div>
+                </article>
+              ))}
+            </div>
+
+            <div className="text-center">
+              <Link to="/blog" className="btn btn-primary px-8 py-3 text-base font-semibold">
+                Xem tất cả bài viết <ArrowRight className="ml-2 w-5 h-5" />
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12">

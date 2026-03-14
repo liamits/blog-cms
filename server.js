@@ -74,10 +74,16 @@ app.get('/api/public/posts', async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const category = req.query.category;
+        const search = req.query.search;
 
         const query = { status: 'published' };
-        if (category) {
-            query.category = category;
+        if (category) query.category = category;
+        if (search) {
+            query.$or = [
+                { title: { $regex: search, $options: 'i' } },
+                { content: { $regex: search, $options: 'i' } },
+                { tags: { $in: [new RegExp(search, 'i')] } }
+            ];
         }
 
         const posts = await Post.find(query)

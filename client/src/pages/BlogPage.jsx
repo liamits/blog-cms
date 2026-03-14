@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { Calendar, User, Eye, ArrowLeft } from 'lucide-react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { Calendar, User, Eye, ArrowLeft, Search, X } from 'lucide-react'
 import { postsAPI, categoriesAPI } from '../services/api'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 
@@ -11,11 +11,14 @@ const BlogPage = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchInput, setSearchInput] = useState(searchParams.get('search') || '')
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '')
 
   useEffect(() => {
     loadPosts()
     loadCategories()
-  }, [selectedCategory, currentPage])
+  }, [selectedCategory, currentPage, searchQuery])
 
   const loadPosts = async () => {
     try {
@@ -23,9 +26,9 @@ const BlogPage = () => {
       const params = {
         page: currentPage,
         limit: 6,
-        ...(selectedCategory && { category: selectedCategory })
+        ...(selectedCategory && { category: selectedCategory }),
+        ...(searchQuery && { search: searchQuery })
       }
-      
       const response = await postsAPI.getPublic(params)
       setPosts(response.data.posts)
       setTotalPages(response.data.totalPages)
@@ -34,6 +37,24 @@ const BlogPage = () => {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleSearch = (e) => {
+    e.preventDefault()
+    setSearchQuery(searchInput)
+    setCurrentPage(1)
+    if (searchInput.trim()) {
+      setSearchParams({ search: searchInput.trim() })
+    } else {
+      setSearchParams({})
+    }
+  }
+
+  const clearSearch = () => {
+    setSearchInput('')
+    setSearchQuery('')
+    setSearchParams({})
+    setCurrentPage(1)
   }
 
   const loadCategories = async () => {
@@ -90,6 +111,35 @@ const BlogPage = () => {
           </Link>
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Posts</h1>
           <p className="text-xl text-gray-600">Discover articles about technology, development, and more</p>
+
+          {/* Search Bar */}
+          <form onSubmit={handleSearch} className="mt-6 max-w-lg mx-auto">
+            <div className="flex items-center border border-gray-300 rounded-full px-2 py-2 bg-white shadow-sm focus-within:ring-2 focus-within:ring-primary-500 transition-all">
+              <Search className="w-5 h-5 text-gray-400 ml-2 flex-shrink-0" />
+              <input
+                type="text"
+                value={searchInput}
+                onChange={e => setSearchInput(e.target.value)}
+                placeholder="Tìm kiếm bài viết..."
+                className="flex-1 px-3 py-1 outline-none text-gray-700 bg-transparent"
+              />
+              {searchInput && (
+                <button type="button" onClick={clearSearch} className="text-gray-400 hover:text-gray-600 mr-1">
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+              <button type="submit" className="bg-primary-500 hover:bg-primary-600 text-white px-4 py-1.5 rounded-full text-sm font-medium transition-colors">
+                Tìm
+              </button>
+            </div>
+          </form>
+
+          {searchQuery && (
+            <p className="mt-3 text-sm text-gray-500">
+              Kết quả tìm kiếm cho: <span className="font-semibold text-primary-600">"{searchQuery}"</span>
+              <button onClick={clearSearch} className="ml-2 text-red-500 hover:underline">Xóa</button>
+            </p>
+          )}
         </div>
 
         {/* Category Filter */}
