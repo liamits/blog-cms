@@ -13,7 +13,6 @@ const PORT = process.env.PORT || 3002;
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname)));
 app.use('/img', express.static(path.join(__dirname, 'img')));
 
 // Session middleware
@@ -156,7 +155,15 @@ app.get('/admin', (req, res) => {
 });
 
 // Serve React static files
-app.use(express.static(path.join(__dirname, 'client/dist')));
+app.use(express.static(path.join(__dirname, 'client/dist'), {
+    etag: false,
+    lastModified: false,
+    setHeaders: (res, path) => {
+        if (path.endsWith('.html')) {
+            res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate')
+        }
+    }
+}));
 
 // Catch all handler for React Router
 app.get('*', (req, res) => {

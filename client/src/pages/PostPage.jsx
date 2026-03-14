@@ -79,11 +79,26 @@ const PostPage = () => {
             </div>
           </div>
 
-          <div className="prose prose-lg max-w-none">
-            {post.content.split('\n').map((paragraph, index) => (
-              <p key={index} className="mb-4">{paragraph}</p>
-            ))}
+          <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+            {post.content.split('\n').map((paragraph, index) =>
+              paragraph.trim() ? (
+                <p key={index} className="mb-4">{paragraph}</p>
+              ) : (
+                <br key={index} />
+              )
+            )}
           </div>
+
+          {/* Tags */}
+          {post.tags?.length > 0 && (
+            <div className="mt-8 pt-6 border-t border-gray-200 flex flex-wrap gap-2">
+              {post.tags.map(tag => (
+                <span key={tag} className="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-full">
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
         </article>
       </div>
     </div>

@@ -72,7 +72,7 @@ const BlogPage = () => {
             </Link>
             <div className="flex items-center space-x-6">
               <Link to="/" className="text-gray-700 hover:text-primary-500 transition-colors">Home</Link>
-              <Link to="/blog" className="text-primary-500 font-medium">Blog</Link>
+              <Link to="/blog" className="text-primary-500 font-medium">Posts</Link>
             </div>
           </div>
         </div>
@@ -88,7 +88,7 @@ const BlogPage = () => {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
           </Link>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Blog Posts</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Posts</h1>
           <p className="text-xl text-gray-600">Discover articles about technology, development, and more</p>
         </div>
 

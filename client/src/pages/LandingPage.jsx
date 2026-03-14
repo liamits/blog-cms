@@ -54,7 +54,7 @@ const LandingPage = () => {
             </div>
             <div className="hidden md:flex items-center space-x-8">
               <Link to="/" className="text-gray-700 hover:text-primary-500 transition-colors">Home</Link>
-              <Link to="/blog" className="text-gray-700 hover:text-primary-500 transition-colors">Blog</Link>
+              <Link to="/blog" className="text-gray-700 hover:text-primary-500 transition-colors">Posts</Link>
               <Link to="#about" className="text-gray-700 hover:text-primary-500 transition-colors">About</Link>
             </div>
           </div>
@@ -92,9 +92,9 @@ const LandingPage = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link 
                 to="/blog" 
-                className="btn btn-primary bg-white text-primary-600 hover:bg-gray-100 px-8 py-4 text-lg font-semibold"
+                className="btn px-8 py-4 text-lg font-semibold bg-orange-500 hover:bg-orange-600 text-white shadow-lg"
               >
-                Explore Blog <ArrowRight className="ml-2 w-5 h-5" />
+                Explore Posts <ArrowRight className="ml-2 w-5 h-5" />
               </Link>
               <a 
                 href="#about" 
@@ -219,7 +219,7 @@ const LandingPage = () => {
             <div>
               <h4 className="text-lg font-semibold mb-4">Links</h4>
               <ul className="space-y-2">
-                <li><Link to="/blog" className="text-gray-400 hover:text-white transition-colors">Blog</Link></li>
+                <li><Link to="/blog" className="text-gray-400 hover:text-white transition-colors">Posts</Link></li>
                 <li><a href="#about" className="text-gray-400 hover:text-white transition-colors">About</a></li>
               </ul>
             </div>
