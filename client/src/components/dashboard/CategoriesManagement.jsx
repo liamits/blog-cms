@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Plus, Pencil, Trash2, X, Check } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
+import { Plus, Pencil, Trash2, X, Check, Search } from 'lucide-react'
 import { categoriesAPI } from '../../services/api'
 import { useToast } from '../ui/Toaster'
 import LoadingSpinner from '../ui/LoadingSpinner'
@@ -120,6 +120,7 @@ const CategoriesManagement = () => {
   const [modalOpen, setModalOpen] = useState(false)
   const [editTarget, setEditTarget] = useState(null)
   const [deleteId, setDeleteId] = useState(null)
+  const [search, setSearch] = useState('')
 
   const fetchCategories = async () => {
     try {
@@ -133,6 +134,14 @@ const CategoriesManagement = () => {
   }
 
   useEffect(() => { fetchCategories() }, [])
+
+  const filteredCategories = useMemo(() => {
+    if (!search.trim()) return categories
+    return categories.filter(c =>
+      c.name.toLowerCase().includes(search.toLowerCase()) ||
+      c.description?.toLowerCase().includes(search.toLowerCase())
+    )
+  }, [categories, search])
 
   const handleEdit = (cat) => {
     setEditTarget(cat)
@@ -162,11 +171,30 @@ const CategoriesManagement = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Categories</h1>
-          <p className="text-gray-500 text-sm">{categories.length} categories total</p>
+          <p className="text-gray-500 text-sm">
+            {filteredCategories.length}{search ? ` / ${categories.length}` : ''} categories
+          </p>
         </div>
         <button onClick={handleAdd} className="btn btn-primary flex items-center gap-2">
           <Plus className="w-4 h-4" /> Add Category
         </button>
+      </div>
+
+      {/* Search bar */}
+      <div className="relative max-w-sm">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <input
+          type="text"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Tìm theo tên, mô tả..."
+          className="input pl-9 py-2 text-sm"
+        />
+        {search && (
+          <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <X className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* List */}
@@ -179,9 +207,13 @@ const CategoriesManagement = () => {
             <Plus className="w-4 h-4 mr-2" /> Create first category
           </button>
         </div>
+      ) : filteredCategories.length === 0 ? (
+        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+          <p className="text-gray-400">Không tìm thấy danh mục phù hợp</p>
+        </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {categories.map(cat => (
+          {filteredCategories.map(cat => (
             <div key={cat._id} className="bg-white rounded-xl border border-gray-200 p-5 flex items-start justify-between hover:shadow-md transition-shadow">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
