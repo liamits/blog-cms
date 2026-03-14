@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Plus, Pencil, Trash2, X, Eye, FileText } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
+import { Plus, Pencil, Trash2, X, Eye, FileText, Search, Filter } from 'lucide-react'
 import { postsAPI, categoriesAPI } from '../../services/api'
 import { useToast } from '../ui/Toaster'
 import { useAuth } from '../../hooks/useAuth.jsx'
@@ -180,10 +180,16 @@ const PostsManagement = () => {
   const [editTarget, setEditTarget] = useState(null)
   const [deleteId, setDeleteId] = useState(null)
 
+  // Filters
+  const [search, setSearch] = useState('')
+  const [filterCategory, setFilterCategory] = useState('')
+  const [filterDateFrom, setFilterDateFrom] = useState('')
+  const [filterDateTo, setFilterDateTo] = useState('')
+
   const fetchData = async () => {
     try {
       const [postsRes, catsRes] = await Promise.all([
-        postsAPI.getAll({ limit: 50 }),
+        postsAPI.getAll({ limit: 200 }),
         categoriesAPI.getAll()
       ])
       setPosts(postsRes.data.posts)
@@ -196,6 +202,32 @@ const PostsManagement = () => {
   }
 
   useEffect(() => { fetchData() }, [])
+
+  // Filter logic (client-side)
+  const filteredPosts = useMemo(() => {
+    return posts.filter(post => {
+      const matchSearch = !search ||
+        post.title.toLowerCase().includes(search.toLowerCase()) ||
+        post.author.toLowerCase().includes(search.toLowerCase())
+
+      const matchCategory = !filterCategory || post.category?._id === filterCategory
+
+      const postDate = new Date(post.createdAt)
+      const matchFrom = !filterDateFrom || postDate >= new Date(filterDateFrom)
+      const matchTo = !filterDateTo || postDate <= new Date(filterDateTo + 'T23:59:59')
+
+      return matchSearch && matchCategory && matchFrom && matchTo
+    })
+  }, [posts, search, filterCategory, filterDateFrom, filterDateTo])
+
+  const hasFilter = search || filterCategory || filterDateFrom || filterDateTo
+
+  const clearFilters = () => {
+    setSearch('')
+    setFilterCategory('')
+    setFilterDateFrom('')
+    setFilterDateTo('')
+  }
 
   const handleEdit = (post) => { setEditTarget(post); setModalOpen(true) }
   const handleAdd = () => { setEditTarget(null); setModalOpen(true) }
@@ -221,23 +253,94 @@ const PostsManagement = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Posts</h1>
-          <p className="text-gray-500 text-sm">{posts.length} posts total</p>
+          <p className="text-gray-500 text-sm">
+            {filteredPosts.length}{hasFilter ? ` / ${posts.length}` : ''} posts
+          </p>
         </div>
         <button onClick={handleAdd} className="btn btn-primary flex items-center gap-2">
           <Plus className="w-4 h-4" /> New Post
         </button>
       </div>
 
+      {/* Filter Bar */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <div className="flex flex-wrap gap-3 items-end">
+          {/* Search by title */}
+          <div className="flex-1 min-w-[180px]">
+            <label className="block text-xs font-medium text-gray-500 mb-1">Tìm theo tên</label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Tên bài viết, tác giả..."
+                className="input pl-9 py-2 text-sm"
+              />
+            </div>
+          </div>
+
+          {/* Filter by category */}
+          <div className="min-w-[160px]">
+            <label className="block text-xs font-medium text-gray-500 mb-1">Danh mục</label>
+            <select
+              value={filterCategory}
+              onChange={e => setFilterCategory(e.target.value)}
+              className="input py-2 text-sm"
+            >
+              <option value="">Tất cả danh mục</option>
+              {categories.map(c => (
+                <option key={c._id} value={c._id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Filter by date from */}
+          <div className="min-w-[140px]">
+            <label className="block text-xs font-medium text-gray-500 mb-1">Từ ngày</label>
+            <input
+              type="date"
+              value={filterDateFrom}
+              onChange={e => setFilterDateFrom(e.target.value)}
+              className="input py-2 text-sm"
+            />
+          </div>
+
+          {/* Filter by date to */}
+          <div className="min-w-[140px]">
+            <label className="block text-xs font-medium text-gray-500 mb-1">Đến ngày</label>
+            <input
+              type="date"
+              value={filterDateTo}
+              onChange={e => setFilterDateTo(e.target.value)}
+              className="input py-2 text-sm"
+            />
+          </div>
+
+          {/* Clear */}
+          {hasFilter && (
+            <button
+              onClick={clearFilters}
+              className="flex items-center gap-1.5 px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-red-200"
+            >
+              <X className="w-4 h-4" /> Xóa filter
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* List */}
       {loading ? (
         <div className="flex justify-center py-20"><LoadingSpinner size="lg" /></div>
-      ) : posts.length === 0 ? (
+      ) : filteredPosts.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
           <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-400 mb-4">No posts yet</p>
-          <button onClick={handleAdd} className="btn btn-primary">
-            <Plus className="w-4 h-4 mr-2" /> Create first post
-          </button>
+          <p className="text-gray-400 mb-4">{hasFilter ? 'Không tìm thấy bài viết phù hợp' : 'No posts yet'}</p>
+          {!hasFilter && (
+            <button onClick={handleAdd} className="btn btn-primary">
+              <Plus className="w-4 h-4 mr-2" /> Create first post
+            </button>
+          )}
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -253,7 +356,7 @@ const PostsManagement = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {posts.map(post => (
+              {filteredPosts.map(post => (
                 <tr key={post._id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="font-medium text-gray-900 line-clamp-1 max-w-xs">{post.title}</div>
